@@ -12,6 +12,19 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Quicksand', sans-serif; overflow-x: hidden; background: #0b2f1f; }
     
+    /* ========== CONTROL DE MÚSICA ========== */
+    .control-musica {
+      position: fixed; bottom: 20px; right: 20px; z-index: 999;
+      background: rgba(20, 60, 25, 0.7); backdrop-filter: blur(8px);
+      padding: 12px 20px; border-radius: 50px; border: 2px solid #9bc181;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.3); display: flex; align-items: center;
+      gap: 15px; color: #f5fbe8; cursor: pointer; transition: 0.2s;
+    }
+    .control-musica:hover { background: rgba(30, 80, 35, 0.8); }
+    .control-musica i { font-size: 1.8rem; }
+    .control-musica span { font-size: 1rem; font-weight: 600; }
+    .volumen-slider { width: 80px; accent-color: #fedb5f; }
+    
     /* ========== PANTALLA INICIO JUNGLA ========== */
     .jungla-portada {
       position: relative; width: 100%; min-height: 100vh;
@@ -68,7 +81,6 @@
       text-align: center;
     }
     
-    /* LOGO EN MODAL */
     .logo-modal {
       width: 200px; margin-bottom: 20px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
     }
@@ -84,7 +96,6 @@
       border: 2px solid #9bc181;
     }
     
-    /* LOGO EN APP PRINCIPAL */
     .logo-app {
       display: block; margin: 0 auto 20px; width: 250px;
       filter: drop-shadow(0 6px 12px rgba(0,30,0,0.3));
@@ -169,6 +180,18 @@
 </head>
 <body>
 
+<!-- AUDIO DE FONDO -->
+<audio id="musicaFondo" loop preload="auto">
+  <source src="https://res.cloudinary.com/dmis07evg/video/upload/q_auto/f_auto/v1776736936/Bosque_Canino_s4kpfk.mp3" type="audio/mpeg">
+</audio>
+
+<!-- CONTROL DE MÚSICA FLOTANTE -->
+<div class="control-musica" id="controlMusica" style="display: none;">
+  <i class="fas fa-volume-up" id="iconoMusica"></i>
+  <span id="textoMusica">Música ON</span>
+  <input type="range" class="volumen-slider" id="volumenSlider" min="0" max="1" step="0.1" value="0.3">
+</div>
+
 <!-- PANTALLA INICIO -->
 <div class="jungla-portada" id="pantallaInicio">
   <div class="parallax-layer nubes"></div>
@@ -181,7 +204,7 @@
   </div>
 </div>
 
-<!-- MODAL LOGIN (CON LOGO) -->
+<!-- MODAL LOGIN -->
 <div class="modal-overlay" id="modalLogin">
   <div class="modal-card">
     <img src="https://res.cloudinary.com/dmis07evg/image/upload/q_auto/f_auto/v1776731623/logo-white_hmxpau.png" alt="NSC Logo" class="logo-modal">
@@ -192,7 +215,7 @@
   </div>
 </div>
 
-<!-- APP EJERCICIO (CON LOGO) -->
+<!-- APP EJERCICIO -->
 <div class="app-principal" id="appEjercicio">
   <div class="contenido-ejercicio">
     <img src="https://res.cloudinary.com/dmis07evg/image/upload/q_auto/f_auto/v1776731623/logo-white_hmxpau.png" alt="NSC Logo" class="logo-app">
@@ -297,6 +320,7 @@
   (function(){
     "use strict";
 
+    // Elementos DOM
     const pantallaInicio = document.getElementById('pantallaInicio');
     const modalLogin = document.getElementById('modalLogin');
     const appEjercicio = document.getElementById('appEjercicio');
@@ -313,8 +337,42 @@
     const ventanaFelicitaciones = document.getElementById('ventanaFelicitaciones');
     const felizNombreGrado = document.getElementById('felizNombreGrado');
     const btnCerrarFeliz = document.getElementById('btnCerrarFelicitaciones');
+    
+    // Elementos de música
+    const musicaFondo = document.getElementById('musicaFondo');
+    const controlMusica = document.getElementById('controlMusica');
+    const iconoMusica = document.getElementById('iconoMusica');
+    const textoMusica = document.getElementById('textoMusica');
+    const volumenSlider = document.getElementById('volumenSlider');
 
     let nombreGuardado = '', gradoGuardado = '';
+    let musicaActiva = true;
+
+    // Configurar volumen inicial (moderado)
+    musicaFondo.volume = 0.3;
+    volumenSlider.value = 0.3;
+
+    // Control de música: clic en el botón
+    controlMusica.addEventListener('click', (e) => {
+      if(e.target === volumenSlider) return; // No interferir con el slider
+      if(musicaActiva) {
+        musicaFondo.pause();
+        iconoMusica.className = 'fas fa-volume-mute';
+        textoMusica.textContent = 'Música OFF';
+        musicaActiva = false;
+      } else {
+        musicaFondo.play();
+        iconoMusica.className = 'fas fa-volume-up';
+        textoMusica.textContent = 'Música ON';
+        musicaActiva = true;
+      }
+    });
+
+    // Control de volumen
+    volumenSlider.addEventListener('input', (e) => {
+      musicaFondo.volume = e.target.value;
+      e.stopPropagation();
+    });
 
     btnEntrar.addEventListener('click', ()=> modalLogin.style.display = 'flex');
     
@@ -325,6 +383,11 @@
       modalLogin.style.display = 'none';
       pantallaInicio.style.display = 'none';
       appEjercicio.style.display = 'block';
+      
+      // Mostrar control de música y reproducir
+      controlMusica.style.display = 'flex';
+      musicaFondo.play().catch(e => console.log('Autoplay bloqueado, usuario debe interactuar'));
+      
       iniciarBarraFalsa();
     });
 
